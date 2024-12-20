@@ -1,0 +1,50 @@
+
+version: '3.8'
+services:
+  db:
+    image: postgres:13
+    container_name: postgres_db
+    env_file:
+      - ./.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+ 
+  backend:
+    image: mohamedeg/backend
+    container_name: backend
+    depends_on:
+      - db
+    env_file:
+      - ./.env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./static_backend:/app/static
+      - ./static_media:/app/media
+ 
+
+  stripe:
+    image: stripe/stripe-cli:v1.21.2
+    container_name: stripe
+    command: ["listen", "--forward-to", "http://backend:8000/api/payment/stripe_webhook"]
+    depends_on:
+      - backend
+    env_file:
+      - ./.env
+
+  frontend:
+    image: mohamedeg/frontend
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+ 
+
+
+  
